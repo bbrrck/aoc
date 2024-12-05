@@ -1,0 +1,4 @@
+*.ipynb
+answers.txt
+input.txt
+__pycache__
