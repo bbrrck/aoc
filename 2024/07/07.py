@@ -1,14 +1,12 @@
+import os
 import sys
-from functools import reduce
-from operator import add, mul, or_
+from functools import partial
+from multiprocessing import Pool
+from operator import add, mul
 from pathlib import Path
+from typing import Callable
 
 from tqdm import tqdm
-
-filename = Path(__file__).parent / "input.txt" if len(sys.argv) < 2 else sys.argv[1]
-
-with open(filename) as f:
-    data = f.read()  # noqa: F841
 
 
 def concat(x, y):
@@ -19,74 +17,87 @@ def concat(x, y):
     return int(str(x) + str(y))
 
 
-def is_valid_equation(y, xs, i, next_op, running_total, ops):
+def validate_equation(
+    equation: tuple[int, list[int]],
+    ops: list,
+    depth: int = 0,
+    next_op: Callable | None = None,
+    running_total: int | None = None,
+) -> int:
     """Check if the equation is valid.
 
     Parameters
     ----------
-    y : int
-        The target value.
-    xs : list of int
-        The numbers in the equation.
-    i : int
-        The index of the current operation in the equation.
+    equation : tuple[int, list[int]]
+        The equation to check.
+        - equation[0] is the target value.
+        - equation[1] is the list of numbers that should be added/multiplied/concatenated.
+    ops : list
+        Possible operators to use to add the next number to the running total.
+        For part 1, ops = [add, mul].
+        For part 2, ops = [add, mul, concat].
+    depth : int
+        The index of the current x that is being added to the running total.
     next_op : function
         The function to use to add the next number to the running total.
     running_total : int
         The current running total.
-    ops : list of functions
-        The functions to use to add the next number to the running total.
-        For part 1, ops = [add, mul].
-        For part 2, ops = [add, mul, concat].
 
     Returns
     -------
-    bool
-        True if there is a combination of ops that combines the xs up to y, False otherwise.
+    int
+        target value (equation[0]) if there exists a combination of ops
+        that makes the equation valid; 0 otherwise.
     """
-    # If end is reached, check if we have a match
-    if i == len(xs) - 1:
-        return running_total == y
-    # Update the running total
-    running_total = next_op(running_total, xs[i + 1])
-    # If the running total is too big, return early
-    if running_total > y:
-        return False
-    # Check the next operation
-    return reduce(
-        or_,
-        (is_valid_equation(y, xs, i + 1, op, running_total, ops) for op in ops),
+    y, xs = equation
+
+    # Start
+    if next_op is None:
+        # Initialize the combination
+        running_total = xs[0]
+
+    # End
+    elif depth == len(xs):
+        # If end is reached, check if we have a match
+        return y if running_total == y else 0
+
+    # Middle
+    else:
+        # Update the running total
+        running_total = next_op(running_total, xs[depth])
+        # If the running total is too big, return early
+        if running_total > y:
+            return 0
+
+    # Recursion: check the next operation
+    return max(
+        [
+            validate_equation(
+                equation=equation,
+                ops=ops,
+                next_op=op,
+                depth=depth + 1,
+                running_total=running_total,
+            )
+            for op in ops
+        ]
     )
 
 
-# Parse input data
-equations = [line.split(": ") for line in data.splitlines()]
-results = []
-numbers = []
-for y, xs in equations:
-    results.append(int(y))
-    numbers.append(list(map(int, xs.split(" "))))
+# Read and parse input data
+filename = Path(__file__).parent / "input.txt" if len(sys.argv) < 2 else sys.argv[1]
+with open(filename) as f:
+    equations = [
+        (int((eq := line.split(": "))[0]), list(map(int, eq[1].split(" "))))
+        for line in f.read().splitlines()
+    ]
 
-# Initialize
-ops_1 = [add, mul]
-ops_2 = [add, mul, concat]
-answer_1 = 0
-answer_2 = 0
-
-# Loop over all equations
-for y, xs in tqdm(list(zip(results, numbers))):
-    matched_1 = reduce(
-        or_,
-        (is_valid_equation(y, xs, 0, op, xs[0], ops_1) for op in ops_1),
-    )
-    matched_2 = reduce(
-        or_,
-        (is_valid_equation(y, xs, 0, op, xs[0], ops_2) for op in ops_2),
-    )
-    # Update totals if a match was found
-    if matched_1:
-        answer_1 += y
-    if matched_2:
-        answer_2 += y
-print(answer_1)
-print(answer_2)
+# Process using multiprocessing
+print(f"CPU count: {os.cpu_count()}")
+ops_1 = (add, mul)
+ops_2 = (add, mul, concat)
+with Pool(os.cpu_count()) as pool:
+    answer_1 = list(tqdm(pool.imap(partial(validate_equation, ops=ops_1), equations)))
+    answer_2 = list(tqdm(pool.imap(partial(validate_equation, ops=ops_2), equations)))
+print(sum(answer_1))
+print(sum(answer_2))
