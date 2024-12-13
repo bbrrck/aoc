@@ -54,11 +54,13 @@ for machine in machines:
     if out_1.success:
         answer_1 += out_1.fun
 
-    # Part 2 via mixed-integer programming --> this does not give the correct answer
+    # Part 2 via mixed-integer programming --> this
     out_2 = milp(
         c=[COST_A, COST_B],
         integrality=[1, 1],
-        constraints=LinearConstraint(A=A, lb=b2, ub=b2),
+        # If lb and ub are equal, the solver sometimes does not converge.
+        # We therefore add a small tolerance to the bounds.
+        constraints=LinearConstraint(A=A, lb=b2 - (eps := 1e-1), ub=b2 + eps),
         bounds=Bounds(lb=0, ub=np.inf),
     )
     if out_2.success:
@@ -72,4 +74,5 @@ for machine in machines:
     answer_2b += np.dot(c, np.round(x))
 
 print(int(answer_1))
+print(int(answer_2a))
 print(int(answer_2b))
