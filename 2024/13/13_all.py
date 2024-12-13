@@ -35,7 +35,8 @@ COST_A, COST_B = 3, 1
 
 c = np.array([COST_A, COST_B])
 integrality = [1, 1]
-answer_1 = 0
+answer_1a = 0
+answer_1b = 0
 answer_2a = 0
 answer_2b = 0
 for machine in machines:
@@ -52,7 +53,7 @@ for machine in machines:
         bounds=Bounds(lb=0, ub=100),
     )
     if out_1.success:
-        answer_1 += out_1.fun
+        answer_1a += out_1.fun
 
     # Part 2 via mixed-integer programming --> this
     out_2 = milp(
@@ -67,12 +68,15 @@ for machine in machines:
         answer_2a += out_2.fun
 
     # Part 2 via naive matrix inversion
-    x = np.matmul(np.linalg.inv(A), b2)
+    x1 = np.matmul(np.linalg.inv(A), b1)
+    x2 = np.matmul(np.linalg.inv(A), b2)
     # check if x has integer elements
-    if np.abs(x - np.round(x)).sum() > 0.01:  # This threshold works for some reason
-        continue
-    answer_2b += np.dot(c, np.round(x))
+    if np.abs(x1 - np.round(x1)).sum() < 0.01:  # This threshold works for some reason
+        answer_1b += np.dot(c, np.round(x1))
+    if np.abs(x2 - np.round(x2)).sum() < 0.01:  # This threshold works for some reason
+        answer_2b += np.dot(c, np.round(x2))
 
-print(int(answer_1))
+print(int(answer_1a))
+print(int(answer_1b))
 print(int(answer_2a))
 print(int(answer_2b))
