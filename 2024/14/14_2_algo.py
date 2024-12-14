@@ -38,7 +38,7 @@ def get_size_of_largest_connected_component():
     # Find the largest connected component
     unvisited = set([(x, y) for x in range(wide) for y in range(tall) if grid[y][x]])
     visited = set()
-    connected_components = []
+    max_len = 0
     while unvisited:
         # Pop the next unvisited
         x_start, y_start = unvisited.pop()
@@ -59,16 +59,16 @@ def get_size_of_largest_connected_component():
                 if grid[y1][x1]:
                     unvisited.discard((x1, y1))
                     queue.append((x1, y1))
-        connected_components.append(component)
-    return max(([len(cc) for cc in connected_components]))
+        if len(component) > max_len:
+            max_len = len(component)
+    return max_len
 
 
 dim = [wide, tall]
 i = 0
 while True:
     i += 1
-    # if i % 100 == 0:
-    print(f"elapsed seconds: {i}", end="\r")
+    print(f"Elapsed seconds: {i}", end="\r")
     for k in range(len(robots)):
         for d in range(2):
             pos[k][d] += vel[k][d]
