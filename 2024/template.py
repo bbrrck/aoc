@@ -6,23 +6,11 @@ sys.path.insert(0, "../")
 from pathlib import Path
 from aoc_tools import *
 
-filename = Path(__file__).parent / "input.txt" if len(sys.argv) < 2 else sys.argv[1]
+filename = (
+    Path(__file__).parent / "input.txt" if len(sys.argv) < 2 else Path(sys.argv[1])
+)
 
 with open(filename) as f:
     data = f.read()
-
-# ------------------------------------------------
-
-...
-
-# ------------------------------------------------
-
-answer_1 = ...
-print(answer_1)
-
-# ------------------------------------------------
-
-answer_2 = ...
-print(answer_2)
 
 # ------------------------------------------------
