@@ -31,3 +31,11 @@ def grid_pos(grid: list[list[str]], value: str):
 
 def grid_all(grid: list[list[str]], value: str):
     return list(grid_iter(grid, value))
+
+
+def pos_to_idx(r: int, c: int, n_cols: int) -> int:
+    return r * n_cols + c
+
+
+def idx_to_pos(k: int, n_cols: int) -> tuple[int, int]:
+    return k // n_cols, k % n_cols
