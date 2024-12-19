@@ -1,4 +1,10 @@
-def run_program(a: int, b: int, c: int, prog: list[int]) -> list[int]:
+def run_program(
+    a: int,
+    b: int,
+    c: int,
+    prog: list[int],
+    debug_print: bool = False,
+) -> list[int]:
     # Helper function to get combo operand
     def combo(operand):
         if operand >= 0 and operand <= 3:
@@ -24,6 +30,12 @@ def run_program(a: int, b: int, c: int, prog: list[int]) -> list[int]:
         # Get the current instruction
         opcode = prog[pointer]
         operand = prog[pointer + 1]
+
+        if debug_print:
+            print(
+                f"p={pointer:2d}  {a=:<8d}  {b=:<8d}  {c=:<8d} i={opcode} o={operand} c={combo(operand) if operand != 7 else 'n/a'}"
+            )
+
         # Execute the instruction
         if opcode == 0:
             a //= 2 ** combo(operand)
@@ -36,10 +48,14 @@ def run_program(a: int, b: int, c: int, prog: list[int]) -> list[int]:
             # otherwise, jump back
             if a != 0:
                 pointer = operand
+                if debug_print:
+                    print("-" * 80)
                 continue
         elif opcode == 4:
             b ^= c
         elif opcode == 5:
+            if debug_print:
+                print(combo(operand) % 8)
             output.append(combo(operand) % 8)
         elif opcode == 6:
             # opcode=6 does not appear in input programs
