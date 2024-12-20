@@ -39,3 +39,7 @@ def pos_to_idx(r: int, c: int, n_cols: int) -> int:
 
 def idx_to_pos(k: int, n_cols: int) -> tuple[int, int]:
     return k // n_cols, k % n_cols
+
+
+def manhattan(x0, y0, x1, y1):
+    return abs(x1 - x0) + abs(y1 - y0)
